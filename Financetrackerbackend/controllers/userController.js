@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key_here";
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, currency } = req.body;
 
 
     const existingUser = await User.findOne({ email });
@@ -25,6 +25,7 @@ export const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       role: role || "student",
+      currency: currency || "USD",
     });
 
     await user.save();
@@ -36,6 +37,7 @@ export const registerUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        currency: user.currency,
       },
     });
   } catch (error) {
@@ -86,6 +88,7 @@ export const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        currency: user.currency,
       },
     });
   } catch (error) {
@@ -131,10 +134,17 @@ export const getUsersByRole = async (req, res) => {
 // Update user
 export const updateUser = async (req, res) => {
   try {
-    const { name, email, role, isActive } = req.body;
+    const { name, email, role, isActive, currency } = req.body;
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (email !== undefined) updates.email = email;
+    if (role !== undefined) updates.role = role;
+    if (isActive !== undefined) updates.isActive = isActive;
+    if (currency !== undefined) updates.currency = currency;
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { name, email, role, isActive },
+      updates,
       { new: true }
     ).select("-password");
 

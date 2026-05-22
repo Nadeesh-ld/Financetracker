@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema(
       enum: ["student", "teacher", "admin"],
       default: "student",
     },
+    currency: {
+      type: String,
+      enum: ["USD", "EUR", "GBP", "JPY", "CNY", "LKR", "INR", "CAD", "AUD", "CHF", "SGD", "KRW", "RUB", "SAR", "AED", "THB", "MYR", "IDR", "PKR", "BDT", "ZAR", "NGN", "BRL", "MXN", "TRY", "NZD"],
+      default: "USD",
+    },
     isActive: {
       type: Boolean,
       default: true,

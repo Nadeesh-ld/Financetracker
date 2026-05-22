@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 
 // MongoDB URL
 const mongodbURI = process.env.MONGODB_URI ||
-  "mongodb+srv://gona:12345678m@cluster0.eqnilse.mongodb.net/expensesDB?appName=Cluster0";
+  "";
 
 // MongoDB connect
 mongoose

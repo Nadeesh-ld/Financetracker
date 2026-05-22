@@ -42,9 +42,31 @@ export async function updateExpence(req, res) {
             return res.status(404).json({ message: "Expense not found" });
         }
 
+        const allowedFields = [
+            "amount",
+            "description",
+            "type",
+            "wallet",
+            "transactionDate",
+            "category",
+            "isRecurring",
+            "recurringType",
+            "isEmi",
+            "loanName",
+            "emiTotalMonths",
+            "emiMonthsPaid"
+        ];
+
+        const updates = {};
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
         const updatedExpense = await Expence.findByIdAndUpdate(
             id,
-            { amount: req.body.amount, description: req.body.description, type: req.body.type },
+            updates,
             { new: true }
         );
 
