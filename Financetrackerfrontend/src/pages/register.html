@@ -37,6 +37,16 @@
             align-items: center;
             margin: 0;
         }
+        body.light-theme {
+            --bg-body: #eef3ff;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-input: #e8eefb;
+            --primary: #1d4ed8;
+            --primary-glow: rgba(29, 78, 216, 0.25);
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border: rgba(15, 23, 42, 0.12);
+        }
 
         /* --- CARD STYLES --- */
         .page-container {
@@ -100,39 +110,25 @@
         }
 
        
-        input, select {
+        input {
             width: 100%;
             padding: 14px 16px 14px 45px; 
             background: var(--bg-input);
-            border: 1px solid transparent;
+            border: 1px solid rgba(148, 163, 184, 0.28);
             border-radius: 12px;
             color: var(--text-main);
             font-size: 1rem;
             outline: none;
             transition: all 0.2s;
-            appearance: none; 
-            -webkit-appearance: none;
         }
 
-        
-        .select-wrapper::after {
-            content: '\f078'; 
-            font-family: "Phosphor"; 
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            pointer-events: none;
-        }
-
-        input:focus, select:focus {
+        input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
             background: #1e293b;
         }
 
-        input::placeholder, select:invalid {
+        input::placeholder {
             color: #64748b;
         }
 
@@ -282,18 +278,6 @@
             </div>
           </div>
           
-          <div class="form-group">
-            <div class="input-wrapper select-wrapper">
-                <i class="ph ph-users"></i>
-                <select id="role" name="role" required>
-                  <option value="" disabled selected>Select Role</option>
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="admin">Admin</option>
-                </select>
-            </div>
-          </div>
-          
           <button class="submit-btn" type="submit">
               <span id="btn-text">Create Account</span>
           </button>
@@ -307,16 +291,17 @@
 
     <!-- External Scripts -->
     <script src="/js/header.js"></script>
+    <script src="/js/theme.js"></script>
     <script src="/js/auth.js"></script>
     
  
     <script>
       
       if (typeof register === 'undefined') {
-          window.register = async (name, email, password, role) => {
+          window.register = async (name, email, password) => {
               return new Promise((resolve, reject) => {
                   setTimeout(() => {
-                      if(name && email && password && role) {
+                      if(name && email && password) {
                           resolve({ success: true });
                       } else {
                           reject(new Error('All fields are required'));
@@ -344,10 +329,9 @@
         const name = form.name.value.trim();
         const email = form.email.value.trim();
         const password = form.password.value;
-        const role = form.role.value;
 
         try {
-          await register(name, email, password, role);
+          await register(name, email, password);
           
       
           const modal = document.getElementById('successModal');

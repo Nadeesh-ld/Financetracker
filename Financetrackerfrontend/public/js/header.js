@@ -39,6 +39,8 @@
           <h1 class="brand">💰 Finance Tracker</h1>
           <nav class="main-nav">
             <a href="/src/pages/index.html">Home</a>
+            <a href="/src/pages/dashboard.html">Dashboard</a>
+            <a href="/src/pages/live-rates.html">Live Rates</a>
             <a href="/src/pages/reports.html">Reports</a>
             <a href="/src/pages/settings.html">Settings</a>
           </nav>

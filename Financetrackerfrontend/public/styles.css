@@ -1,18 +1,21 @@
 /* Shared styles for static pages (header, buttons, hero, forms) */
 :root{
-  --brand:#4a90e2;
-  --accent:#ff7a59;
+  --brand:#0b1565;
+  --brand-2:#1e2b7a;
+  --accent:#1d4ed8;
   --muted:#6b7280;
-  --bg:#f8fafc;
+  --bg:#0f172a;
 }
 *{box-sizing:border-box}
-body{font-family:Segoe UI,Roboto,Arial,sans-serif;margin:0;color:#111;background:var(--bg)}
+body{font-family:Segoe UI,Roboto,Arial,sans-serif;margin:0;color:#e2e8f0;background:var(--bg)}
+body.light-theme{--bg:#eef3ff;color:#0f172a}
 
 /* Topbar */
-#topbar .top-bar{background:var(--brand);padding:12px 20px;color:#fff}
+#topbar .top-bar{background:linear-gradient(90deg,var(--brand),var(--brand-2));padding:12px 20px;color:#fff}
 #topbar .top-bar .container{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
 #topbar .brand{font-size:18px;margin:0}
-#topbar .main-nav a{color:#fff;text-decoration:none;margin-right:14px;font-weight:600}
+#topbar .main-nav a{color:#fff;text-decoration:none;margin-right:10px;font-weight:700;padding:8px 14px;border-radius:10px;display:inline-block}
+#topbar .main-nav a:hover{background:rgba(255,255,255,0.12)}
 
 .auth-actions{display:flex;gap:8px}
 .btn{display:inline-block;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:600}

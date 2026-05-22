@@ -23,12 +23,12 @@ async function login(email, password) {
   }
 }
 
-async function register(name, email, password, role = 'student') {
+async function register(name, email, password) {
   try {
     const res = await fetch(`${API_BASE}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ name, email, password }),
     });
     const text = await res.text();
     let data;
@@ -54,4 +54,3 @@ function logout() {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
 }
-

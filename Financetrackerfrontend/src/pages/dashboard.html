@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -6,7 +6,7 @@
    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
-    <title>Dashboard — Finance Tracker</title>
+    <title>Dashboard â€” Finance Tracker</title>
     
     <style>
       
@@ -32,10 +32,23 @@
         color: var(--text-main);
         min-height: 100vh;
       }
+      body.light-theme {
+        --bg-body: #eef3ff;
+        --bg-card: #ffffff;
+        --bg-input: #e8eefb;
+        --text-main: #0f172a;
+        --text-muted: #475569;
+        --primary: #1d4ed8;
+        --success: #059669;
+        --danger: #dc2626;
+        --warning: #d97706;
+        --border: #cbd5e1;
+        --shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+      }
 
       /* --- LAYOUT --- */
       .page-container {
-        max-width: 1200px;
+        max-width: 100%;
         margin: 0 auto;
         padding: 40px 20px;
       }
@@ -104,6 +117,12 @@
         gap: 24px;
         align-items: start;
       }
+      .left-column { display: grid; gap: 16px; }
+      .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
 
       @media (max-width: 850px) {
         .content-grid { grid-template-columns: 1fr; }
@@ -123,6 +142,20 @@
       }
       .card-header h2 { font-size: 1.1rem; font-weight: 600; }
       .card-body { padding: 20px; }
+      .inline-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .mini-note { color: var(--text-muted); font-size: 0.82rem; margin-top: 4px; }
+      .alert-danger {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        color: #fca5a5;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+      }
 
   
       .form-group { margin-bottom: 16px; }
@@ -213,6 +246,59 @@
 
       /* Loading State */
       .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+      .widget-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+      }
+      .widget-item {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px;
+      }
+      .widget-item .k { color: var(--text-muted); font-size: 0.8rem; }
+      .widget-item .v { font-size: 1rem; font-weight: 700; margin-top: 4px; }
+      .widget-rate {
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin-top: 8px;
+      }
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+      }
+      .modal.show { display: flex; }
+      .modal-content {
+        width: min(760px, 100%);
+        max-height: 92vh;
+        overflow: auto;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+      .btn-close {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-main);
+        border-radius: 8px;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
 
       @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
@@ -224,7 +310,7 @@
       
       <!-- Success Message -->
       <div id="successMessage" style="display:none;" class="alert-box">
-        ✅ Login successful! Welcome to your dashboard.
+        âœ… Login successful! Welcome to your dashboard.
       </div>
 
       <!-- User Bar -->
@@ -250,58 +336,177 @@
             <div class="stat-value" id="profit-amount">$0.00</div>
           </div>
         </div>
+        <div class="card" style="margin-bottom:24px;">
+          <div class="card-header"><h2>Wallet Balances</h2></div>
+          <div class="card-body">
+            <div class="stats-grid" id="walletSummaryGrid"></div>
+          </div>
+        </div>
 
         <div class="content-grid">
-          
-          <!-- Form Section -->
-          <div class="card">
-            <div class="card-header">
-              <h2 id="form-title">Add Transaction</h2>
+          <div class="left-column">
+            <div class="card">
+              <div class="card-header"><h2>Quick Actions</h2></div>
+              <div class="card-body action-buttons">
+                <button class="btn btn-primary" id="openTransactionBtn" type="button">Add Transaction</button>
+                <button class="btn btn-secondary" id="openSmartBtn" type="button">Smart Controls</button>
+              </div>
             </div>
-            <div class="card-body">
-              <form id="transaction-form">
-                <div class="form-group">
-                  <label>Type</label>
-                  <select id="type" required>
-                    <option value="income">💸 Income</option>
-                    <option value="expense">💳 Expense</option>
-                  </select>
+            <div class="card">
+              <div class="card-header"><h2>Live Currency</h2></div>
+              <div class="card-body">
+                <p class="mini-note">Open full live rates page with flags and all conversions.</p>
+                <a class="btn btn-secondary" href="/src/pages/live-rates.html" style="text-decoration:none;margin-top:12px;">Open Live Rates</a>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h2>Currency Converter</h2></div>
+              <div class="card-body">
+                <p class="mini-note" id="mainConvertPairLabel">USD to LKR</p>
+                <div class="inline-grid">
+                  <input type="number" id="mainConvertAmount" placeholder="1.00" step="0.01" value="1" />
+                  <select id="mainConvertFrom"><option value="USD">USD</option></select>
                 </div>
-                <div class="form-group">
-                  <label>Amount</label>
-                  <input type="number" id="amount" placeholder="0.00" required step="0.01" />
+                <div class="inline-grid" style="margin-top:10px;">
+                  <select id="mainConvertTo"><option value="LKR">LKR</option></select>
+                  <button type="button" class="btn btn-secondary" id="mainConvertBtn">Convert</button>
                 </div>
-                <div class="form-group">
-                  <label>Description</label>
-                  <input type="text" id="description" placeholder="e.g. Grocery Shopping" required />
-                </div>
-                <div class="form-actions">
-                  <button type="submit" id="submit-btn" class="btn btn-primary">Add Transaction</button>
-                  <button type="button" id="cancel-btn" class="btn btn-secondary" style="display:none;">Cancel</button>
-                </div>
-              </form>
+                <p class="mini-note" id="mainConvertResult">Converted amount will appear here.</p>
+              </div>
             </div>
           </div>
-
           <div class="card">
             <div class="card-header">
               <h2>Recent Transactions</h2>
+              <div class="inline-grid" style="margin-top:10px;">
+                <input type="text" id="searchInput" placeholder="Search description/category..." />
+                <select id="filterType"><option value="">All Types</option><option value="income">Income</option><option value="expense">Expense</option></select>
+              </div>
+              <div class="inline-grid" style="margin-top:10px;">
+                <input type="date" id="filterDateFrom" />
+                <input type="date" id="filterDateTo" />
+              </div>
+              <div class="inline-grid" style="margin-top:10px;">
+                <input type="number" id="filterMinAmount" placeholder="Min amount" step="0.01" />
+                <input type="number" id="filterMaxAmount" placeholder="Max amount" step="0.01" />
+              </div>
             </div>
             <ul id="transaction-list" class="transaction-list">
               <li class="loading">Loading transactions...</li>
             </ul>
           </div>
+        </div>
 
+        <div class="modal" id="transactionModal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2 id="form-title">Add Transaction</h2>
+              <button type="button" class="btn-close" data-close="transactionModal">Close</button>
+            </div>
+            <div class="card-body">
+              <form id="transaction-form">
+                <div class="form-group"><label>Type</label><select id="type" required><option value="income">Income</option><option value="expense">Expense</option></select></div>
+                <div class="form-group"><label>Amount</label><input type="number" id="amount" placeholder="0.00" required step="0.01" /></div>
+                <div class="form-group"><label>Description</label><input type="text" id="description" placeholder="e.g. Grocery Shopping" required /></div>
+                <div class="form-group inline-grid">
+                  <div>
+                    <label>Wallet</label>
+                    <select id="wallet">
+                      <option value="Cash">Cash</option>
+                      <option value="Bank">Bank</option>
+                      <option value="eWallet">eWallet</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Date</label>
+                    <input type="date" id="transactionDate" />
+                  </div>
+                </div>
+                <div class="form-group"><label>Category</label><select id="category"><option>Food</option><option>Transport</option><option>Housing</option><option>Shopping</option><option>Utilities</option><option>Health</option><option>Entertainment</option><option>Loan/EMI</option><option selected>Other</option></select></div>
+                <div class="form-group inline-grid">
+                  <div><label>Recurring</label><select id="recurringType"><option value="none">None</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+                  <div><label>EMI/Loan</label><select id="isEmi"><option value="false">No</option><option value="true">Yes</option></select></div>
+                </div>
+                <div class="form-group inline-grid">
+                  <div><label>Loan Name</label><input type="text" id="loanName" placeholder="e.g. Bike Loan" /></div>
+                  <div><label>Months Paid / Total</label><input type="text" id="emiProgress" placeholder="e.g. 4/24" /></div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" id="submit-btn" class="btn btn-primary">Add Transaction</button>
+                  <button type="button" id="cancel-btn" class="btn btn-secondary">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal" id="smartModal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Smart Controls</h2>
+              <button type="button" class="btn-close" data-close="smartModal">Close</button>
+            </div>
+            <div class="card-body">
+              <div id="overspendingAlerts"></div>
+              <div class="form-group">
+                <label>Budget Limit by Category</label>
+                <div class="inline-grid">
+                  <select id="budgetCategory"><option>Food</option><option>Transport</option><option>Housing</option><option>Shopping</option><option>Utilities</option><option>Health</option><option>Entertainment</option><option>Loan/EMI</option><option>Other</option></select>
+                  <input type="number" id="budgetLimit" placeholder="Limit amount" step="0.01" />
+                </div>
+                <button type="button" class="btn btn-secondary" id="saveBudgetBtn">Save Budget</button>
+              </div>
+              <div class="form-group">
+                <label>Savings Goal</label>
+                <input type="number" id="savingsGoal" placeholder="Enter your goal amount" step="0.01" />
+                <button type="button" class="btn btn-secondary" id="saveGoalBtn">Save Goal</button>
+                <p class="mini-note" id="goalProgressText">Goal progress: 0%</p>
+              </div>
+              <div class="form-group">
+                <label>Currency Conversion</label>
+                <div class="inline-grid">
+                  <input type="number" id="convertAmount" placeholder="Amount" step="0.01" />
+                  <select id="convertFrom"><option value="USD">USD</option></select>
+                </div>
+                <div class="inline-grid" style="margin-top:10px;">
+                  <select id="convertTo"><option value="LKR">LKR</option></select>
+                  <div class="mini-note" style="display:flex;align-items:center;">From currency to target currency</div>
+                </div>
+                <button type="button" class="btn btn-secondary" id="convertBtn">Convert</button>
+                <p class="mini-note" id="convertResult">Converted amount will appear here.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </main>
 
     <script src="/js/header.js"></script>
+    <script src="/js/theme.js"></script>
     <script>
      
       let transactions = [];
+      let filteredTransactions = [];
       let editingId = null;
       const API_BASE = window.API_BASE || 'http://localhost:3001';
+      let activeCurrency = 'USD';
+      let budgetLimits = {};
+      let savingsGoal = 0;
+      let fxRates = null;
+
+      function getActiveCurrency() {
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        const preferences = JSON.parse(localStorage.getItem('preferences') || '{}');
+        return user?.currency || preferences.currency || 'USD';
+      }
+
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: activeCurrency,
+        }).format(amount || 0);
+      }
 
     
       const els = {
@@ -310,12 +515,48 @@
         type: document.getElementById('type'),
         amount: document.getElementById('amount'),
         description: document.getElementById('description'),
+        wallet: document.getElementById('wallet'),
+        transactionDate: document.getElementById('transactionDate'),
+        category: document.getElementById('category'),
+        recurringType: document.getElementById('recurringType'),
+        isEmi: document.getElementById('isEmi'),
+        loanName: document.getElementById('loanName'),
+        emiProgress: document.getElementById('emiProgress'),
+        searchInput: document.getElementById('searchInput'),
+        filterType: document.getElementById('filterType'),
+        filterDateFrom: document.getElementById('filterDateFrom'),
+        filterDateTo: document.getElementById('filterDateTo'),
+        filterMinAmount: document.getElementById('filterMinAmount'),
+        filterMaxAmount: document.getElementById('filterMaxAmount'),
         submitBtn: document.getElementById('submit-btn'),
         cancelBtn: document.getElementById('cancel-btn'),
         formTitle: document.getElementById('form-title'),
         displayIncome: document.getElementById('display-income'),
         displayExpense: document.getElementById('display-expense'),
-        profitAmount: document.getElementById('profit-amount')
+        profitAmount: document.getElementById('profit-amount'),
+        walletSummaryGrid: document.getElementById('walletSummaryGrid'),
+        budgetCategory: document.getElementById('budgetCategory'),
+        budgetLimit: document.getElementById('budgetLimit'),
+        saveBudgetBtn: document.getElementById('saveBudgetBtn'),
+        savingsGoal: document.getElementById('savingsGoal'),
+        saveGoalBtn: document.getElementById('saveGoalBtn'),
+        goalProgressText: document.getElementById('goalProgressText'),
+        overspendingAlerts: document.getElementById('overspendingAlerts'),
+        convertAmount: document.getElementById('convertAmount'),
+        convertFrom: document.getElementById('convertFrom'),
+        convertTo: document.getElementById('convertTo'),
+        convertBtn: document.getElementById('convertBtn'),
+        convertResult: document.getElementById('convertResult'),
+        mainConvertAmount: document.getElementById('mainConvertAmount'),
+        mainConvertFrom: document.getElementById('mainConvertFrom'),
+        mainConvertTo: document.getElementById('mainConvertTo'),
+        mainConvertBtn: document.getElementById('mainConvertBtn'),
+        mainConvertResult: document.getElementById('mainConvertResult'),
+        mainConvertPairLabel: document.getElementById('mainConvertPairLabel'),
+        openTransactionBtn: document.getElementById('openTransactionBtn'),
+        openSmartBtn: document.getElementById('openSmartBtn'),
+        transactionModal: document.getElementById('transactionModal'),
+        smartModal: document.getElementById('smartModal')
       };
 
      
@@ -336,6 +577,7 @@
           
           const data = await res.json();
           transactions = data;
+          applyFilters();
           render();
         } catch (err) {
           console.error("Error fetching transactions:", err);
@@ -345,24 +587,69 @@
 
     
       function render() {
+        applyFilters();
         renderSummary();
+        renderWalletSummary();
         renderList();
+        renderSmartStats();
+      }
+
+      function renderWalletSummary() {
+        const wallets = ['Cash', 'Bank', 'eWallet'];
+        const cards = wallets.map((wallet) => {
+          const walletTx = transactions.filter((t) => (t.wallet || 'Cash') === wallet);
+          const income = walletTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+          const expense = walletTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+          const net = income - expense;
+          return `
+            <div class="stat-card">
+              <div class="stat-label">${wallet}</div>
+              <div class="mini-note">Income: ${formatCurrency(income)}</div>
+              <div class="mini-note">Expense: ${formatCurrency(expense)}</div>
+              <div class="stat-value ${net >= 0 ? 'text-green' : 'text-red'}" style="font-size:1.2rem;margin-top:8px;">${formatCurrency(net)}</div>
+            </div>
+          `;
+        });
+        els.walletSummaryGrid.innerHTML = cards.join('');
+      }
+
+      function applyFilters() {
+        const term = (els.searchInput?.value || '').trim().toLowerCase();
+        const typeFilter = els.filterType?.value || '';
+        const dateFrom = els.filterDateFrom?.value ? new Date(`${els.filterDateFrom.value}T00:00:00`) : null;
+        const dateTo = els.filterDateTo?.value ? new Date(`${els.filterDateTo.value}T23:59:59`) : null;
+        const minAmount = els.filterMinAmount?.value ? Number(els.filterMinAmount.value) : null;
+        const maxAmount = els.filterMaxAmount?.value ? Number(els.filterMaxAmount.value) : null;
+        filteredTransactions = transactions.filter((t) => {
+          const matchType = !typeFilter || t.type === typeFilter;
+          const matchTerm = !term
+            || (t.description || '').toLowerCase().includes(term)
+            || (t.category || '').toLowerCase().includes(term)
+            || (t.loanName || '').toLowerCase().includes(term);
+          const txDate = new Date(t.transactionDate || t.date || t.createdAt);
+          const txAmount = Math.abs(Number(t.amount || 0));
+          const matchDateFrom = !dateFrom || txDate >= dateFrom;
+          const matchDateTo = !dateTo || txDate <= dateTo;
+          const matchMinAmount = minAmount === null || txAmount >= minAmount;
+          const matchMaxAmount = maxAmount === null || txAmount <= maxAmount;
+          return matchType && matchTerm && matchDateFrom && matchDateTo && matchMinAmount && matchMaxAmount;
+        });
       }
 
       function renderSummary() {
-        const totalIncome = transactions
+        const totalIncome = filteredTransactions
           .filter((t) => t.type === "income")
           .reduce((sum, t) => sum + t.amount, 0);
         
-        const totalExpense = transactions
+        const totalExpense = filteredTransactions
           .filter((t) => t.type === "expense")
           .reduce((sum, t) => sum + t.amount, 0);
         
         const profit = totalIncome - totalExpense;
 
-        els.displayIncome.textContent = `$${totalIncome.toFixed(2)}`;
-        els.displayExpense.textContent = `$${totalExpense.toFixed(2)}`;
-        els.profitAmount.textContent = `$${profit.toFixed(2)}`;
+        els.displayIncome.textContent = formatCurrency(totalIncome);
+        els.displayExpense.textContent = formatCurrency(totalExpense);
+        els.profitAmount.textContent = formatCurrency(profit);
 
         
         els.profitAmount.className = `stat-value ${profit >= 0 ? "text-green" : "text-red"}`;
@@ -371,19 +658,19 @@
       function renderList() {
         els.list.innerHTML = ""; 
 
-        if (transactions.length === 0) {
+        if (filteredTransactions.length === 0) {
           els.list.innerHTML = "<li class='loading'>No transactions found. Add one to get started!</li>";
           return;
         }
 
         
-        const sortedTx = [...transactions].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+        const sortedTx = [...filteredTransactions].sort((a, b) => new Date(b.transactionDate || b.createdAt || b.date) - new Date(a.transactionDate || a.createdAt || a.date));
 
         sortedTx.forEach((t) => {
           const li = document.createElement("li");
           li.className = `transaction-item`;
           
-          const icon = t.type === "income" ? "📈" : "📉";
+          const icon = t.type === "income" ? "ðŸ“ˆ" : "ðŸ“‰";
           const amountClass = t.type === "income" ? "text-green" : "text-red";
           const sign = t.type === "income" ? "+" : "-";
 
@@ -392,14 +679,14 @@
               <div class="tx-icon">${icon}</div>
               <div class="tx-details">
                 <h4>${t.description}</h4>
-                <span>${new Date(t.date || t.createdAt).toLocaleDateString()}</span>
+                <span>${new Date(t.transactionDate || t.date || t.createdAt).toLocaleDateString()} • ${t.wallet || 'Cash'} • ${t.category || 'Other'}${t.isRecurring ? ' • Recurring' : ''}${t.isEmi ? ' • EMI' : ''}</span>
               </div>
             </div>
             <div class="tx-right">
-              <span class="tx-amount ${amountClass}">${sign}$${Math.abs(t.amount).toFixed(2)}</span>
+              <span class="tx-amount ${amountClass}">${sign}${formatCurrency(Math.abs(t.amount))}</span>
               <div class="action-btns">
-                <button type="button" class="btn-icon btn-edit" onclick="handleEdit('${t._id}')" title="Edit">✏️</button>
-                <button type="button" class="btn-icon btn-delete" onclick="handleDelete('${t._id}')" title="Delete">🗑️</button>
+                <button type="button" class="btn-icon btn-edit" onclick="handleEdit('${t._id}')" title="Edit">âœï¸</button>
+                <button type="button" class="btn-icon btn-delete" onclick="handleDelete('${t._id}')" title="Delete">ðŸ—‘ï¸</button>
               </div>
             </div>
           `;
@@ -410,11 +697,25 @@
    
       els.form.addEventListener("submit", async (e) => {
         e.preventDefault();
+        const isEmi = els.isEmi.value === 'true';
+        const recurringType = els.recurringType.value;
+        const emiParts = (els.emiProgress.value || '').split('/').map((x) => parseInt(x.trim(), 10));
+        const emiMonthsPaid = Number.isFinite(emiParts[0]) ? emiParts[0] : 0;
+        const emiTotalMonths = Number.isFinite(emiParts[1]) ? emiParts[1] : 0;
 
         const payload = {
           type: els.type.value,
           amount: parseFloat(els.amount.value),
           description: els.description.value,
+          wallet: els.wallet.value,
+          transactionDate: els.transactionDate.value || new Date().toISOString(),
+          category: els.category.value || 'Other',
+          isRecurring: recurringType !== 'none',
+          recurringType,
+          isEmi,
+          loanName: isEmi ? (els.loanName.value || '') : '',
+          emiMonthsPaid: isEmi ? emiMonthsPaid : 0,
+          emiTotalMonths: isEmi ? emiTotalMonths : 0,
         };
 
         try {
@@ -443,6 +744,7 @@
 
           await fetchTransactions();
           resetForm();
+          closeModal(els.transactionModal);
 
         } catch (err) {
           console.error(err);
@@ -458,12 +760,22 @@
         els.type.value = t.type;
         els.amount.value = t.amount;
         els.description.value = t.description;
+        els.wallet.value = t.wallet || 'Cash';
+        const dt = new Date(t.transactionDate || t.date || t.createdAt);
+        if (!Number.isNaN(dt.getTime())) {
+          els.transactionDate.value = dt.toISOString().split('T')[0];
+        }
+        els.category.value = t.category || 'Other';
+        els.recurringType.value = t.recurringType || (t.isRecurring ? 'monthly' : 'none');
+        els.isEmi.value = t.isEmi ? 'true' : 'false';
+        els.loanName.value = t.loanName || '';
+        els.emiProgress.value = t.isEmi ? `${t.emiMonthsPaid || 0}/${t.emiTotalMonths || 0}` : '';
         
         editingId = id;
         
         els.formTitle.textContent = "Edit Transaction";
         els.submitBtn.textContent = "Update Transaction";
-        els.cancelBtn.style.display = "inline-block";
+        openModal(els.transactionModal);
       };
 
       window.handleDelete = async function(id) {
@@ -487,18 +799,188 @@
       function resetForm() {
         els.amount.value = "";
         els.description.value = "";
+        els.wallet.value = "Cash";
+        els.transactionDate.value = new Date().toISOString().split('T')[0];
         els.type.value = "income";
+        els.category.value = "Other";
+        els.recurringType.value = "none";
+        els.isEmi.value = "false";
+        els.loanName.value = "";
+        els.emiProgress.value = "";
         editingId = null;
 
         els.formTitle.textContent = "Add Transaction";
         els.submitBtn.textContent = "Add Transaction";
-        els.cancelBtn.style.display = "none";
       }
 
-      els.cancelBtn.addEventListener("click", resetForm);
+      els.cancelBtn.addEventListener("click", () => {
+        resetForm();
+        closeModal(els.transactionModal);
+      });
+
+      function loadSmartSettings() {
+        const prefs = JSON.parse(localStorage.getItem('smartDashboard') || '{}');
+        budgetLimits = prefs.budgetLimits || {};
+        savingsGoal = Number(prefs.savingsGoal || 0);
+        els.savingsGoal.value = savingsGoal || '';
+      }
+
+      function saveSmartSettings() {
+        localStorage.setItem('smartDashboard', JSON.stringify({ budgetLimits, savingsGoal }));
+      }
+
+      function renderSmartStats() {
+        const income = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+        const expense = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+        const net = income - expense;
+        const progress = savingsGoal > 0 ? Math.max(0, Math.min(100, (net / savingsGoal) * 100)) : 0;
+        els.goalProgressText.textContent = `Goal progress: ${progress.toFixed(1)}% (${formatCurrency(net)} / ${formatCurrency(savingsGoal || 0)})`;
+
+        const month = new Date().getMonth();
+        const year = new Date().getFullYear();
+        const monthlyByCategory = {};
+        transactions
+          .filter((t) => t.type === 'expense')
+          .forEach((t) => {
+            const d = new Date(t.transactionDate || t.createdAt || t.date);
+            if (d.getMonth() === month && d.getFullYear() === year) {
+              const cat = t.category || 'Other';
+              monthlyByCategory[cat] = (monthlyByCategory[cat] || 0) + Math.abs(t.amount);
+            }
+          });
+
+        const alerts = [];
+        Object.entries(budgetLimits).forEach(([cat, limit]) => {
+          const spent = monthlyByCategory[cat] || 0;
+          if (limit > 0 && spent > limit) {
+            alerts.push(`<div class="alert-danger">Overspending Alert: ${cat} spent ${formatCurrency(spent)} / limit ${formatCurrency(limit)}</div>`);
+          }
+        });
+        els.overspendingAlerts.innerHTML = alerts.join('') || '<p class="mini-note">No overspending alerts this month.</p>';
+      }
+
+      async function ensureFxRates() {
+        if (fxRates) return fxRates;
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
+        if (!res.ok) throw new Error('Unable to load live rates');
+        const data = await res.json();
+        if (!data?.rates) throw new Error('Invalid rates response');
+        fxRates = data.rates;
+        const codes = Object.keys(fxRates).sort();
+        const options = codes.map((c) => `<option value="${c}">${c}</option>`).join('');
+        if (els.mainConvertFrom) {
+          els.mainConvertFrom.innerHTML = options;
+          els.mainConvertTo.innerHTML = options;
+          els.mainConvertFrom.value = 'USD';
+          els.mainConvertTo.value = 'LKR';
+        }
+        if (els.convertFrom) {
+          els.convertFrom.innerHTML = options;
+          els.convertTo.innerHTML = options;
+          els.convertFrom.value = activeCurrency || 'USD';
+          els.convertTo.value = 'LKR';
+        }
+        return fxRates;
+      }
+
+      function calculateConversion(amount, from, to) {
+        const usdAmount = amount / (fxRates[from] || 1);
+        const converted = usdAmount * (fxRates[to] || 1);
+        return converted;
+      }
+
+      async function convertMainDashboard() {
+        const amount = Number(els.mainConvertAmount.value || 0);
+        if (!amount) {
+          els.mainConvertResult.textContent = 'Enter amount to convert.';
+          return;
+        }
+        try {
+          await ensureFxRates();
+          const from = els.mainConvertFrom.value;
+          const to = els.mainConvertTo.value;
+          const converted = calculateConversion(amount, from, to);
+          const convertedText = new Intl.NumberFormat('en-US', { style: 'currency', currency: to }).format(converted);
+          els.mainConvertResult.textContent = `${amount} ${from} = ${convertedText}`;
+          els.mainConvertPairLabel.textContent = `${from} to ${to}`;
+        } catch (err) {
+          els.mainConvertResult.textContent = err.message || 'Conversion failed.';
+        }
+      }
+
+      async function convertSmartModal() {
+        const amount = Number(els.convertAmount.value || 0);
+        if (!amount) {
+          els.convertResult.textContent = 'Enter amount to convert.';
+          return;
+        }
+        try {
+          await ensureFxRates();
+          const from = els.convertFrom.value;
+          const to = els.convertTo.value;
+          const converted = calculateConversion(amount, from, to);
+          const convertedText = new Intl.NumberFormat('en-US', { style: 'currency', currency: to }).format(converted);
+          els.convertResult.textContent = `${amount} ${from} = ${convertedText}`;
+        } catch (err) {
+          els.convertResult.textContent = err.message || 'Conversion failed.';
+        }
+      }
+
+      function openModal(modalEl) {
+        if (modalEl) modalEl.classList.add('show');
+      }
+
+      function closeModal(modalEl) {
+        if (modalEl) modalEl.classList.remove('show');
+      }
+
+      els.searchInput.addEventListener('input', render);
+      els.filterType.addEventListener('change', render);
+      els.filterDateFrom.addEventListener('change', render);
+      els.filterDateTo.addEventListener('change', render);
+      els.filterMinAmount.addEventListener('input', render);
+      els.filterMaxAmount.addEventListener('input', render);
+      if (els.convertBtn) els.convertBtn.addEventListener('click', convertSmartModal);
+      if (els.mainConvertBtn) els.mainConvertBtn.addEventListener('click', convertMainDashboard);
+      if (els.mainConvertFrom && els.mainConvertTo) {
+        const updatePair = () => {
+          els.mainConvertPairLabel.textContent = `${els.mainConvertFrom.value} to ${els.mainConvertTo.value}`;
+        };
+        els.mainConvertFrom.addEventListener('change', updatePair);
+        els.mainConvertTo.addEventListener('change', updatePair);
+      }
+      els.openTransactionBtn.addEventListener('click', () => openModal(els.transactionModal));
+      els.openSmartBtn.addEventListener('click', () => {
+        renderSmartStats();
+        openModal(els.smartModal);
+      });
+      document.querySelectorAll('[data-close]').forEach((btn) => {
+        btn.addEventListener('click', () => closeModal(document.getElementById(btn.dataset.close)));
+      });
+      [els.transactionModal, els.smartModal].forEach((modalEl) => {
+        modalEl.addEventListener('click', (e) => {
+          if (e.target === modalEl) closeModal(modalEl);
+        });
+      });
+      els.saveBudgetBtn.addEventListener('click', () => {
+        const cat = els.budgetCategory.value;
+        const limit = Number(els.budgetLimit.value || 0);
+        if (!cat || limit <= 0) return;
+        budgetLimits[cat] = limit;
+        saveSmartSettings();
+        els.budgetLimit.value = '';
+        renderSmartStats();
+      });
+      els.saveGoalBtn.addEventListener('click', () => {
+        savingsGoal = Number(els.savingsGoal.value || 0);
+        saveSmartSettings();
+        renderSmartStats();
+      });
 
      
       function initUI() {
+        activeCurrency = getActiveCurrency();
+        loadSmartSettings();
         const userStr = localStorage.getItem('user');
         const user = userStr ? JSON.parse(userStr) : null;
         
@@ -517,6 +999,7 @@
         }
         
         fetchTransactions();
+        ensureFxRates().catch(() => {});
       }
 
       document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -530,3 +1013,7 @@
     </script>
   </body>
 </html>
+
+
+
+

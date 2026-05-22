@@ -16,13 +16,12 @@ export const loginUser = async (email, password) => {
   }
 };
 
-export const registerUser = async (name, email, password, role = "student") => {
+export const registerUser = async (name, email, password) => {
   try {
     const response = await axios.post(`${API_URL}/register`, {
       name,
       email,
       password,
-      role,
     });
     return response.data;
   } catch (error) {

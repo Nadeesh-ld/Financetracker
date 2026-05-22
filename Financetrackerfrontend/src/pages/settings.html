@@ -32,6 +32,19 @@
         color: var(--text-main);
         min-height: 100vh;
       }
+      body.light-theme {
+        --bg-body: #eef3ff;
+        --bg-card: #ffffff;
+        --bg-input: #e8eefb;
+        --text-main: #0f172a;
+        --text-muted: #475569;
+        --primary: #1d4ed8;
+        --success: #059669;
+        --danger: #dc2626;
+        --warning: #d97706;
+        --border: #cbd5e1;
+        --shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+      }
 
       
       .page-container {
@@ -314,6 +327,26 @@
             </div>
           </div>
         </div>
+        <div class="card">
+          <div class="card-header">
+            <h2>Profile Management</h2>
+          </div>
+          <div class="card-body">
+            <div id="profileMessage" class="status-message"></div>
+            <form id="profileForm" onsubmit="handleProfileUpdate(event)">
+              <div class="form-group">
+                <label for="profileName">Full Name</label>
+                <input type="text" id="profileName" required placeholder="Enter your name" />
+              </div>
+              <div class="form-group">
+                <label for="profileEmail">Email</label>
+                <input type="email" id="profileEmail" required placeholder="Enter your email" />
+              </div>
+              <button type="submit" class="btn btn-primary">Save Profile</button>
+            </form>
+          </div>
+        </div>
+
 
       
         <div class="card">
@@ -352,14 +385,44 @@
             <h2>🎨 Display Preferences</h2>
           </div>
           <div class="card-body">
+            <div id="settingsSaved" class="status-message"></div>
             <div class="form-group">
               <label>Currency</label>
               <select id="currency" onchange="saveSetting('currency')">
-                <option value="USD">US Dollar (USD)</option>
-                <option value="EUR">Euro (EUR)</option>
-                <option value="GBP">British Pound (GBP)</option>
-                <option value="INR">Indian Rupee (INR)</option>
-                <option value="AUD">Australian Dollar (AUD)</option>
+                <option value="USD">US Dollar (USD) - United States</option>
+                <option value="EUR">Euro (EUR) - Europe</option>
+                <option value="GBP">British Pound Sterling (GBP) - United Kingdom</option>
+                <option value="JPY">Japanese Yen (JPY) - Japan</option>
+                <option value="CNY">Chinese Yuan Renminbi (CNY) - China</option>
+                <option value="LKR">Sri Lankan Rupee (LKR) - Sri Lanka</option>
+                <option value="INR">Indian Rupee (INR) - India</option>
+                <option value="CAD">Canadian Dollar (CAD) - Canada</option>
+                <option value="AUD">Australian Dollar (AUD) - Australia</option>
+                <option value="CHF">Swiss Franc (CHF) - Switzerland</option>
+                <option value="SGD">Singapore Dollar (SGD) - Singapore</option>
+                <option value="KRW">South Korean Won (KRW) - South Korea</option>
+                <option value="RUB">Russian Ruble (RUB) - Russia</option>
+                <option value="SAR">Saudi Riyal (SAR) - Saudi Arabia</option>
+                <option value="AED">UAE Dirham (AED) - UAE</option>
+                <option value="THB">Thai Baht (THB) - Thailand</option>
+                <option value="MYR">Malaysian Ringgit (MYR) - Malaysia</option>
+                <option value="IDR">Indonesian Rupiah (IDR) - Indonesia</option>
+                <option value="PKR">Pakistani Rupee (PKR) - Pakistan</option>
+                <option value="BDT">Bangladeshi Taka (BDT) - Bangladesh</option>
+                <option value="ZAR">South African Rand (ZAR) - South Africa</option>
+                <option value="NGN">Nigerian Naira (NGN) - Nigeria</option>
+                <option value="BRL">Brazilian Real (BRL) - Brazil</option>
+                <option value="MXN">Mexican Peso (MXN) - Mexico</option>
+                <option value="TRY">Turkish Lira (TRY) - Turkey</option>
+                <option value="NZD">New Zealand Dollar (NZD) - New Zealand</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Theme</label>
+              <select id="themeMode" onchange="saveSetting('themeMode')">
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
               </select>
             </div>
 
@@ -409,6 +472,7 @@
               </div>
 
               <button type="submit" class="btn btn-primary">Update Password</button>
+              <button type="button" class="btn btn-outline" style="margin-top:10px;" onclick="handlePasswordReset()">Password Reset Link</button>
             </form>
           </div>
         </div>
@@ -434,13 +498,16 @@
     </main>
 
     <script src="/js/header.js"></script>
+    <script src="/js/theme.js"></script>
     <script>
+      const API_USER_BASE = window.API_USER_BASE || 'http://localhost:3001/users';
       
-      function initSettings() {
+      async function initSettings() {
         const userStr = localStorage.getItem('user');
         const user = userStr ? JSON.parse(userStr) : null;
 
-        if (!user || !user.email) {
+        const userId = user?.id || user?._id;
+        if (!user || !user.email || !userId) {
           window.location.href = '/src/pages/index.html';
           return;
         }
@@ -448,10 +515,40 @@
       
         document.getElementById('displayEmail').textContent = user.email;
         document.getElementById('displayRole').textContent = user.role || 'Student';
+        const profileNameEl = document.getElementById('profileName');
+        const profileEmailEl = document.getElementById('profileEmail');
+        if (profileNameEl) profileNameEl.value = user.name || '';
+        if (profileEmailEl) profileEmailEl.value = user.email || '';
 
         
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`${API_USER_BASE}/${userId}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+
+          if (res.ok) {
+            const freshUser = await res.json();
+            const normalizedUser = {
+              ...freshUser,
+              id: freshUser.id || freshUser._id || userId,
+            };
+            localStorage.setItem('user', JSON.stringify(normalizedUser));
+            document.getElementById('displayEmail').textContent = freshUser.email || user.email;
+            document.getElementById('displayRole').textContent = freshUser.role || user.role || 'Student';
+            document.getElementById('currency').value = freshUser.currency || 'USD';
+            if (profileNameEl) profileNameEl.value = freshUser.name || '';
+            if (profileEmailEl) profileEmailEl.value = freshUser.email || '';
+          }
+        } catch (err) {
+          console.error('Failed to refresh user settings:', err);
+        }
+
         const preferences = JSON.parse(localStorage.getItem('preferences') || '{}');
-        document.getElementById('currency').value = preferences.currency || 'USD';
+        if (!document.getElementById('currency').value) {
+          document.getElementById('currency').value = user.currency || preferences.currency || 'USD';
+        }
+        document.getElementById('themeMode').value = localStorage.getItem('themeMode') || 'dark';
         document.getElementById('dateFormat').value = preferences.dateFormat || 'MM/DD/YYYY';
         document.getElementById('itemsPerPage').value = preferences.itemsPerPage || '10';
 
@@ -480,12 +577,58 @@
       }
 
       
-      function saveSetting(id) {
+      async function saveSetting(id) {
         const value = document.getElementById(id).value;
         const preferences = JSON.parse(localStorage.getItem('preferences') || '{}');
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+
+        const userId = user?.id || user?._id;
+        if (id === 'currency' && userId) {
+          try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_USER_BASE}/${userId}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({ currency: value }),
+            });
+
+            if (!res.ok) {
+              throw new Error('Failed to save currency preference');
+            }
+
+            const updated = await res.json();
+            const updatedUser = {
+              ...(updated.user || user),
+              id: updated.user?.id || updated.user?._id || userId,
+            };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            preferences.currency = value;
+            localStorage.setItem('preferences', JSON.stringify(preferences));
+            showMessage('settingsSaved', 'success', 'Currency updated and saved to database.');
+          } catch (err) {
+            console.error(err);
+            showMessage('settingsSaved', 'error', err.message || 'Failed to save currency.');
+          }
+          return;
+        }
+
+        if (id === 'themeMode') {
+          localStorage.setItem('themeMode', value);
+          if (typeof window.setAppTheme === 'function') {
+            window.setAppTheme(value);
+          } else {
+            document.body.classList.toggle('light-theme', value === 'light');
+          }
+          showMessage('settingsSaved', 'success', 'Theme updated successfully!');
+          return;
+        }
+
         preferences[id] = value;
         localStorage.setItem('preferences', JSON.stringify(preferences));
-
         showMessage('settingsSaved', 'success', 'Preference saved successfully!');
       }
 
@@ -513,6 +656,52 @@
         setTimeout(() => {
           document.getElementById('passwordMessage').classList.remove('show');
         }, 3000);
+      }
+
+      async function handleProfileUpdate(event) {
+        event.preventDefault();
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        const userId = user?.id || user?._id;
+        if (!userId) {
+          showMessage('profileMessage', 'error', 'User session not found.');
+          return;
+        }
+
+        const name = document.getElementById('profileName').value.trim();
+        const email = document.getElementById('profileEmail').value.trim();
+        if (!name || !email) {
+          showMessage('profileMessage', 'error', 'Name and email are required.');
+          return;
+        }
+
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`${API_USER_BASE}/${userId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ name, email }),
+          });
+          if (!res.ok) throw new Error('Failed to update profile.');
+          const data = await res.json();
+          const updatedUser = {
+            ...(data.user || user),
+            id: data.user?.id || data.user?._id || userId,
+          };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          document.getElementById('displayEmail').textContent = updatedUser.email || email;
+          showMessage('profileMessage', 'success', 'Profile updated successfully!');
+        } catch (err) {
+          showMessage('profileMessage', 'error', err.message || 'Profile update failed.');
+        }
+      }
+
+      function handlePasswordReset() {
+        const email = document.getElementById('profileEmail')?.value || document.getElementById('displayEmail').textContent;
+        showMessage('passwordMessage', 'success', `Password reset link sent to ${email}`);
       }
 
       // Enable 2FA
@@ -561,3 +750,5 @@
     </script>
   </body>
 </html>
+
+

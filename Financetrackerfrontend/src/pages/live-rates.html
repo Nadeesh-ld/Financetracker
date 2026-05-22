@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Live Rates - Finance Tracker</title>
+    <style>
+      :root {
+        --bg-body: #0f172a;
+        --bg-card: #1e293b;
+        --bg-soft: #233452;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --border: #334155;
+        --primary: #1d4ed8;
+      }
+      body.light-theme {
+        --bg-body: #eef3ff;
+        --bg-card: #ffffff;
+        --bg-soft: #e8eefb;
+        --text-main: #0f172a;
+        --text-muted: #475569;
+        --border: #cbd5e1;
+        --primary: #1d4ed8;
+      }
+      body { margin: 0; font-family: Inter, sans-serif; background: var(--bg-body); color: var(--text-main); }
+      .page { padding: 26px 20px 40px; max-width: 1400px; margin: 0 auto; }
+      .hero {
+        background: linear-gradient(160deg, #0b1565, #172554 60%, #1e3a8a);
+        border-radius: 18px;
+        border: 1px solid rgba(148,163,184,0.25);
+        padding: 22px;
+        margin-bottom: 20px;
+      }
+      .hero h1 { margin: 0 0 8px; font-size: 2rem; }
+      .hero p { margin: 0; color: #dbeafe; }
+      .controls {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: 200px 200px 140px;
+        gap: 10px;
+      }
+      select, input, button {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg-soft);
+        color: var(--text-main);
+      }
+      button { background: var(--primary); border: none; font-weight: 700; cursor: pointer; }
+      .meta { margin: 12px 0 0; color: #dbeafe; font-size: 0.92rem; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 12px;
+      }
+      .rate-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .line1 { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+      .flag { font-size: 1.2rem; }
+      .code { color: var(--text-muted); font-size: 0.82rem; margin-top: 3px; }
+      .value { margin-top: 8px; font-size: 1.05rem; font-weight: 800; }
+      @media (max-width: 720px) { .controls { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div id="topbar"></div>
+    <main class="page">
+      <section class="hero">
+        <h1>Live Currency Rates</h1>
+        <p>Select one base currency and see all converted values live.</p>
+        <div class="controls">
+          <select id="baseCurrency"><option>USD</option></select>
+          <input id="baseAmount" type="number" value="1" step="0.01" />
+          <button id="refreshBtn" type="button">Refresh</button>
+        </div>
+        <p class="meta" id="lastUpdated">Updating live rates...</p>
+      </section>
+      <section class="grid" id="ratesGrid"></section>
+    </main>
+    <script src="/js/header.js"></script>
+    <script src="/js/theme.js"></script>
+    <script>
+      const els = {
+        baseCurrency: document.getElementById('baseCurrency'),
+        baseAmount: document.getElementById('baseAmount'),
+        refreshBtn: document.getElementById('refreshBtn'),
+        lastUpdated: document.getElementById('lastUpdated'),
+        ratesGrid: document.getElementById('ratesGrid'),
+      };
+      let rates = null;
+      const CURRENCY_META = {
+        USD: { flag: '🇺🇸', name: 'US Dollar' }, EUR: { flag: '🇪🇺', name: 'Euro' }, GBP: { flag: '🇬🇧', name: 'British Pound' },
+        JPY: { flag: '🇯🇵', name: 'Japanese Yen' }, CNY: { flag: '🇨🇳', name: 'Chinese Yuan' }, LKR: { flag: '🇱🇰', name: 'Sri Lankan Rupee' },
+        INR: { flag: '🇮🇳', name: 'Indian Rupee' }, CAD: { flag: '🇨🇦', name: 'Canadian Dollar' }, AUD: { flag: '🇦🇺', name: 'Australian Dollar' },
+        CHF: { flag: '🇨🇭', name: 'Swiss Franc' }, SGD: { flag: '🇸🇬', name: 'Singapore Dollar' }, KRW: { flag: '🇰🇷', name: 'South Korean Won' },
+        RUB: { flag: '🇷🇺', name: 'Russian Ruble' }, SAR: { flag: '🇸🇦', name: 'Saudi Riyal' }, AED: { flag: '🇦🇪', name: 'UAE Dirham' },
+        THB: { flag: '🇹🇭', name: 'Thai Baht' }, MYR: { flag: '🇲🇾', name: 'Malaysian Ringgit' }, IDR: { flag: '🇮🇩', name: 'Indonesian Rupiah' },
+        PKR: { flag: '🇵🇰', name: 'Pakistani Rupee' }, BDT: { flag: '🇧🇩', name: 'Bangladeshi Taka' }, ZAR: { flag: '🇿🇦', name: 'South African Rand' },
+        NGN: { flag: '🇳🇬', name: 'Nigerian Naira' }, BRL: { flag: '🇧🇷', name: 'Brazilian Real' }, MXN: { flag: '🇲🇽', name: 'Mexican Peso' },
+        TRY: { flag: '🇹🇷', name: 'Turkish Lira' }, NZD: { flag: '🇳🇿', name: 'New Zealand Dollar' }
+      };
+
+      async function fetchRates() {
+        try {
+          const res = await fetch('https://open.er-api.com/v6/latest/USD');
+          if (!res.ok) throw new Error('Rate API failed');
+          const data = await res.json();
+          rates = data.rates || {};
+          const codes = Object.keys(rates).sort();
+          els.baseCurrency.innerHTML = codes.map(c => `<option value="${c}">${c}</option>`).join('');
+          els.baseCurrency.value = 'USD';
+          render(data.time_last_update_utc);
+        } catch (e) {
+          els.lastUpdated.textContent = 'Unable to fetch live rates.';
+        }
+      }
+
+      function render(time) {
+        if (!rates) return;
+        const amount = Number(els.baseAmount.value || 1);
+        const base = els.baseCurrency.value || 'USD';
+        const baseRate = rates[base] || 1;
+        const cards = Object.keys(rates).sort().map(code => {
+          const converted = (amount / baseRate) * rates[code];
+          const meta = CURRENCY_META[code] || { flag: '🏳️', name: code };
+          return `
+            <article class="rate-card">
+              <div class="line1"><span class="flag">${meta.flag}</span><span>${meta.name}</span></div>
+              <div class="code">${code}</div>
+              <div class="value">${converted.toLocaleString('en-US', { maximumFractionDigits: 6 })}</div>
+            </article>`;
+        });
+        els.ratesGrid.innerHTML = cards.join('');
+        const t = time ? new Date(time) : new Date();
+        els.lastUpdated.textContent = `Base: ${amount} ${base} • Updated: ${t.toLocaleString()}`;
+      }
+
+      els.refreshBtn.addEventListener('click', fetchRates);
+      els.baseCurrency.addEventListener('change', () => render());
+      els.baseAmount.addEventListener('input', () => render());
+      fetchRates();
+      setInterval(fetchRates, 60000);
+    </script>
+  </body>
+</html>
+
