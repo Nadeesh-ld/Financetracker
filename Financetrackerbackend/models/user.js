@@ -28,6 +28,33 @@ const userSchema = new mongoose.Schema(
       enum: ["USD", "EUR", "GBP", "JPY", "CNY", "LKR", "INR", "CAD", "AUD", "CHF", "SGD", "KRW", "RUB", "SAR", "AED", "THB", "MYR", "IDR", "PKR", "BDT", "ZAR", "NGN", "BRL", "MXN", "TRY", "NZD"],
       default: "USD",
     },
+    publicProfile: {
+      type: Boolean,
+      default: false,
+    },
+    appLockEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    appLockBiometric: {
+      type: Boolean,
+      default: true,
+    },
+    themeMode: {
+      type: String,
+      enum: ["dark", "light"],
+      default: "dark",
+    },
+    dateFormat: {
+      type: String,
+      enum: ["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"],
+      default: "MM/DD/YYYY",
+    },
+    itemsPerPage: {
+      type: String,
+      enum: ["10", "25", "50", "100"],
+      default: "10",
+    },
     isActive: {
       type: Boolean,
       default: true,

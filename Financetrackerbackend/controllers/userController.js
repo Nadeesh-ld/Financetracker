@@ -134,13 +134,19 @@ export const getUsersByRole = async (req, res) => {
 // Update user
 export const updateUser = async (req, res) => {
   try {
-    const { name, email, role, isActive, currency } = req.body;
+    const { name, email, role, isActive, currency, publicProfile, appLockEnabled, appLockBiometric, themeMode, dateFormat, itemsPerPage } = req.body;
     const updates = {};
     if (name !== undefined) updates.name = name;
     if (email !== undefined) updates.email = email;
     if (role !== undefined) updates.role = role;
     if (isActive !== undefined) updates.isActive = isActive;
     if (currency !== undefined) updates.currency = currency;
+    if (publicProfile !== undefined) updates.publicProfile = publicProfile;
+    if (appLockEnabled !== undefined) updates.appLockEnabled = appLockEnabled;
+    if (appLockBiometric !== undefined) updates.appLockBiometric = appLockBiometric;
+    if (themeMode !== undefined) updates.themeMode = themeMode;
+    if (dateFormat !== undefined) updates.dateFormat = dateFormat;
+    if (itemsPerPage !== undefined) updates.itemsPerPage = itemsPerPage;
 
     const user = await User.findByIdAndUpdate(
       req.params.id,
