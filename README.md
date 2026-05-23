@@ -95,30 +95,22 @@ Financetracker/
 ## Screenshots
 
 ### Dashboard View
-> [Add your dashboard screenshot here]
-> ![Dashboard](path/to/dashboard-screenshot.png)
+<img width="1884" height="948" alt="image" src="https://github.com/user-attachments/assets/8910c734-21bf-4cf2-8ab0-038c88ee11a2" />
+
 
 ### Add Transaction
-> [Add your transaction form screenshot here]
-> ![Add Transaction](path/to/transaction-screenshot.png)
+<img width="1891" height="948" alt="image" src="https://github.com/user-attachments/assets/1af85f03-8508-4970-b909-53839425efed" />
+
+
 
 ### Analytics & Charts
-> [Add your analytics screenshot here]
-> ![Analytics](path/to/analytics-screenshot.png)
+<img width="1897" height="948" alt="image" src="https://github.com/user-attachments/assets/d5a2e022-7f85-4854-99d5-591221ecc624" />
+
 
 ### Mobile View
-> [Add your mobile view screenshot here]
-> ![Mobile](path/to/mobile-screenshot.png)
+<img width="340" height="753" alt="image" src="https://github.com/user-attachments/assets/c6a1c0b9-2581-407c-a195-f1c6797db55e" />
 
-## How to Add Screenshots
 
-1. Take screenshots of your application's UI
-2. Save them in a `screenshots/` or `assets/` folder in your repository
-3. Replace the placeholder paths above with actual image paths
-4. Example format:
-   ```markdown
-   ![Feature Name](./screenshots/feature-name.png)
-   ```
 
 ## Getting Started with Development
 
