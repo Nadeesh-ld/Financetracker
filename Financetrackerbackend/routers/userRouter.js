@@ -7,7 +7,9 @@ import {
   deleteUser,
   loginUser,
   getUsersByRole,
+  verifyUserPin,
 } from "../controllers/userController.js";
+import auth from "../middleware/auth.js";
 
 const userRouter = express.Router();
 
@@ -20,11 +22,14 @@ userRouter.post("/login", loginUser);
 // GET - Get all users
 userRouter.get("/", getUsers);
 
-// GET - Get user by ID
-userRouter.get("/:id", getUserById);
-
 // GET - Get users by role
 userRouter.get("/role/:role", getUsersByRole);
+
+// POST - Verify app PIN for unlock
+userRouter.post("/:id/verify-pin", auth, verifyUserPin);
+
+// GET - Get user by ID
+userRouter.get("/:id", getUserById);
 
 // PUT - Update user by ID
 userRouter.put("/:id", updateUser);

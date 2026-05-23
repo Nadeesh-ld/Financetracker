@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    appPinHash: {
+      type: String,
+      default: "",
+      select: false,
+    },
     themeMode: {
       type: String,
       enum: ["dark", "light"],
